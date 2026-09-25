@@ -55,7 +55,7 @@ jobs:
             read -r directory architecture <<< "$entry"
             bundle="release/$directory/Transcribe.app"
             codesign --verify --deep --strict --verbose=2 "$bundle"
-            lipo -verify_arch "$architecture" "$bundle/Contents/MacOS/Transcribe"
+            lipo "$bundle/Contents/MacOS/Transcribe" -verify_arch "$architecture"
             expected=$(node -p "require('./package.json').version")
             actual=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$bundle/Contents/Info.plist")
             test "$actual" = "$expected"
