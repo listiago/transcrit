@@ -1,0 +1,7 @@
+* text=auto
+*.sh text eol=lf
+*.yml text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.png binary
+*.ico binary

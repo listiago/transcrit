@@ -1,0 +1,16 @@
+node_modules/
+dist/
+release/
+test-results/
+.env
+.env.*
+*.log
+.DS_Store
+*.pem
+*.p12
+*.pfx
+*.key
+preferences.json
+history.enc
+diagnostics.jsonl*
+.tools/

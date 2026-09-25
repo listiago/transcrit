@@ -1,0 +1,107 @@
+{
+  "name": "transcribe",
+  "productName": "Transcribe",
+  "version": "1.2.3",
+  "description": "Sua voz, em palavras. Ditado simples para Windows e macOS.",
+  "author": {
+    "name": "Tiago Lins",
+    "url": "https://github.com/listiago"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/listiago/transcrit.git"
+  },
+  "homepage": "https://github.com/listiago/transcrit#readme",
+  "bugs": {
+    "url": "https://github.com/listiago/transcrit/issues"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "start": "electron .",
+    "test": "node --test tests/*.test.cjs",
+    "test:e2e": "node scripts/smoke.mjs",
+    "test:reopen": "node scripts/test-reopen.mjs",
+    "test:mouse": "node scripts/test-startup-mouse.mjs --mock-api",
+    "dist:win": "npm run build && electron-builder --win nsis --x64",
+    "dist:mac": "npm run build && electron-builder --mac dmg zip --arm64 --x64"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "lucide-react": "^1.48.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "build": {
+    "appId": "app.transcribe.desktop",
+    "productName": "Transcribe",
+    "directories": {
+      "output": "release",
+      "buildResources": "resources"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "resources/icon.png",
+      "package.json",
+      "LICENSE",
+      "THIRD_PARTY_NOTICES.md"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "electron/native/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "resources/icon.ico",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Transcribe",
+      "artifactName": "Transcribe-Setup-${version}-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "resources/icon.png",
+      "category": "public.app-category.productivity",
+      "artifactName": "Transcribe-${version}-macOS-${arch}.${ext}",
+      "identity": "-",
+      "minimumSystemVersion": "13.0",
+      "hardenedRuntime": true,
+      "entitlements": "resources/entitlements.mac.plist",
+      "entitlementsInherit": "resources/entitlements.mac.plist",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "O Transcribe usa o microfone para transformar sua fala em texto quando você inicia uma gravação.",
+        "NSAppleEventsUsageDescription": "O Transcribe insere o texto ditado no aplicativo em que você está trabalhando."
+      }
+    }
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3",
+    "sharp": "^0.35.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1"
+  }
+}

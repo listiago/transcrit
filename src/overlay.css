@@ -1,0 +1,11 @@
+.dictation-overlay.compact{height:60px;min-height:0;margin:6px;padding:9px 10px 9px 7px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:8px;border:1px solid #505c45;border-radius:17px;background:#252e23;color:#f1f3e9;user-select:none;overflow:hidden;box-shadow:0 3px 6px #0003}
+.overlay-drag{width:16px;height:36px;padding:0;color:#7f8e74;cursor:grab;touch-action:none;flex-shrink:0}
+.overlay-drag:active{cursor:grabbing}
+.overlay-mic{width:40px;height:40px;flex-shrink:0;border:1px solid #a9bb8b;border-radius:13px;background:#dbe7c4;color:#33412c;transition:background .15s}
+.overlay-mic:hover{background:#eaf2da}
+.overlay-mic.listening{background:#dcac87;color:#30281f;border-color:#e9c7a9;box-shadow:0 0 0 4px #dcac8714}
+.has-error .overlay-mic{background:#e9bc9d;border-color:#ee967a;color:#612f21}
+.overlay-close{width:22px;height:32px;flex-shrink:0;padding:0;color:#b3bda9;border-radius:7px}
+.overlay-close:hover{background:#ffffff0c;color:#fff}
+.dictation-overlay button:focus-visible{outline:2px solid #dcad88;outline-offset:2px}
+.dictation-overlay button:active:not(:disabled){transform:none}
