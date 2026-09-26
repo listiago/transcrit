@@ -35,7 +35,7 @@ function apiError(status, data) {
 function noSpeechError() {
   return Object.assign(new Error('Nenhuma fala foi identificada. Tente gravar novamente mais perto do microfone.'), { code: 'no_speech', retryable: false });
 }
-async function transcribeAudio(audio, key, settings, signal, fetcher = fetch, context = '', { allowEmpty = false } = {}) {
+async function requestTranscription(audio, key, settings, signal, fetcher, context, allowEmpty) {
   const form = new FormData();
   form.append('file', new Blob([audio.bytes], { type: audio.mime }), audio.name);
   form.append('model', MODEL);
@@ -50,9 +50,24 @@ async function transcribeAudio(audio, key, settings, signal, fetcher = fetch, co
     throw Object.assign(new Error('Sem conexão com a OpenAI. Confira sua internet e tente novamente.'), { code: 'network' });
   }
   const data = await response.json().catch(() => null);
-  if (!response.ok) throw Object.assign(new Error(apiError(response.status, data)), { code: response.status === 429 && data?.error?.code === 'insufficient_quota' ? 'quota' : 'api_error', httpStatus: response.status });
+  if (!response.ok) {
+    const quota = response.status === 429 && data?.error?.code === 'insufficient_quota';
+    const configuration = quota || [401, 403, 404].includes(response.status);
+    throw Object.assign(new Error(apiError(response.status, data)), { code: quota ? 'quota' : 'api_error', httpStatus: response.status, retryable: !configuration && (response.status === 408 || response.status === 429 || response.status >= 500), action: configuration ? 'settings' : undefined });
+  }
   if (typeof data?.text !== 'string') throw Object.assign(new Error('A OpenAI retornou uma resposta incompleta. Tente novamente.'), { code: 'invalid_response' });
   if (!data.text.trim() && !allowEmpty) throw noSpeechError();
   return data.text.trim();
+}
+async function transcribeAudio(audio, key, settings, signal, fetcher = fetch, context = '', { allowEmpty = false, retries = 2, retryDelay = 700 } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    try { return await requestTranscription(audio, key, settings, signal, fetcher, context, allowEmpty); }
+    catch (error) {
+      const temporary = error.code === 'network' || error.httpStatus === 408 || error.httpStatus === 429 && error.code !== 'quota' || error.httpStatus >= 500;
+      if (!temporary || signal?.aborted || attempt >= retries) throw error;
+      const { setTimeout: delay } = require('node:timers/promises');
+      await delay(retryDelay * 2 ** attempt, undefined, { signal: signal || undefined });
+    }
+  }
 }
 module.exports = { MAX_AUDIO_BYTES, MODEL, DEFAULT_SETTINGS, validateAudio, validateSettings, apiError, transcribeAudio, noSpeechError };

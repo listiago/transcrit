@@ -18,13 +18,13 @@ O código é aberto e o aplicativo é gratuito. **Você usa sua própria chave d
 
 ## Download
 
-**Versão 1.2.3** — instaladores e checksums na [página da versão](https://github.com/listiago/transcrit/releases/tag/v1.2.3).
+**Versão 1.2.4** — instaladores e checksums na [página da versão](https://github.com/listiago/transcrit/releases/tag/v1.2.4).
 
 | Computador | Download | Requisito |
 | --- | --- | --- |
-| Windows | [Instalador .exe](https://github.com/listiago/transcrit/releases/download/v1.2.3/Transcribe-Setup-1.2.3-x64.exe) | Windows 10 ou superior, x64 |
-| Mac com Apple Silicon | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.2.3/Transcribe-1.2.3-macOS-arm64.dmg) | macOS 13 ou superior, chips da família M |
-| Mac com Intel | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.2.3/Transcribe-1.2.3-macOS-x64.dmg) | macOS 13 ou superior, Intel |
+| Windows | [Instalador .exe](https://github.com/listiago/transcrit/releases/download/v1.2.4/Transcribe-Setup-1.2.4-x64.exe) | Windows 10 ou superior, x64 |
+| Mac com Apple Silicon | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.2.4/Transcribe-1.2.4-macOS-arm64.dmg) | macOS 13 ou superior, chips da família M |
+| Mac com Intel | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.2.4/Transcribe-1.2.4-macOS-x64.dmg) | macOS 13 ou superior, Intel |
 
 No Mac, confira o chip em **menu Apple → Sobre Este Mac**. Os arquivos ZIP para as duas arquiteturas também estão na página da versão.
 
@@ -33,6 +33,8 @@ No Mac, confira o chip em **menu Apple → Sobre Este Mac**. Os arquivos ZIP par
 O Windows foi testado com gravação, cliques, atalhos e inserção em outro aplicativo. Os pacotes macOS são compilados no GitHub Actions; **a experiência de ditado em um Mac físico ainda precisa de validação**. Considere o suporte ao Mac experimental nesta versão.
 
 ## Como usar
+
+**Abrir pelo ícone ou pela lista de aplicativos mostra a janela completa**, com Configurações sempre acessíveis para trocar sua chave. O atalho global abre o minicard e inicia o ditado. Abrir ao ligar o computador, quando ativado nas preferências, mantém o aplicativo na bandeja.
 
 1. Instale e abra o Transcribe. No Mac, arraste o aplicativo do DMG para **Aplicativos**.
 2. Em **Configurações**, salve sua chave OpenAI e permita o acesso ao microfone. O botão **Testar conexão** verifica o acesso ao modelo; transcrever também exige saldo e permissões na conta.
@@ -52,6 +54,7 @@ No Mac, use **Configurações → Permitir inserção** e conceda **Acessibilida
 
 ### O que esperar
 
+- Falhas temporárias de conexão recebem até duas novas tentativas automáticas. Erros de chave, permissão ou saldo oferecem acesso às configurações.
 - O card permanece pequeno e acima das janelas. O texto completo é inserido ao terminar, sem prévia ao vivo.
 - O Transcribe **não envia mensagens nem pressiona Enter no aplicativo de destino**. Enter e Esc são capturados temporariamente durante o ditado.
 - Se você mudar de janela durante o processamento, o texto será copiado para colar manualmente. Campos protegidos, aplicativos como administrador e alguns programas podem impedir a inserção automática.

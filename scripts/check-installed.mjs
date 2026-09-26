@@ -37,10 +37,8 @@ try {
     const card = BrowserWindow.getAllWindows().find(window => window.webContents.getURL().includes('#overlay'));
     return { mainVisible: main.isVisible(), cardVisible: card.isVisible(), bounds: card.getBounds() };
   });
-  if (state.keyStatus === 'ready' && (entry.mainVisible || !entry.cardVisible || entry.bounds.width !== 136 || entry.bounds.height !== 72)) throw new Error('Inicialização não mostrou somente o minicard.');
-  const cardPage = desktop.windows().find(window => window.url().includes('#overlay'));
-  await cardPage.screenshot({ path: 'test-results/installed-card.png' });
+  if (!entry.mainVisible || entry.cardVisible) throw new Error('Abrir o aplicativo deve mostrar a janela principal, sem iniciar o minicard.');
   console.log('PASS: app instalado abre em perfil isolado, ASAR carrega, helper funciona, atalho registrado e chave protegida legível.');
   console.log(JSON.stringify(status));
-  console.log('PASS: com a chave configurada, a inicialização mostra somente o minicard lateral.');
+  console.log('PASS: com a chave configurada, a inicialização mantém a janela e as configurações acessíveis.');
 } finally { await desktop.close(); fs.rmSync(dataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }); }

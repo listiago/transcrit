@@ -91,3 +91,33 @@ test('sem cofre, o aplicativo recusa gravar chave em texto puro', t => {
   assert.throws(() => store.saveKey('sk-test-only-never-a-real-key'), /cofre/);
   assert.ok(!fs.existsSync(store.file));
 });
+
+test('conexão ainda indisponível na primeira tentativa se recupera sem descartar áudio', async () => {
+  let calls = 0;
+  const text = await transcribeAudio(audio(), 'sk-test', DEFAULT_SETTINGS, undefined, async () => {
+    if (++calls < 3) throw new Error('ENETUNREACH');
+    return new Response(JSON.stringify({ text: 'Conexão recuperada.' }));
+  }, '', { retryDelay: 1 });
+  assert.equal(text, 'Conexão recuperada.');
+  assert.equal(calls, 3);
+});
+
+test('chave, permissão e saldo exigem configurações, sem repetir a mesma solicitação', async () => {
+  for (const [status, code] of [[401, 'invalid_api_key'], [403, 'permission_denied'], [404, 'model_not_found'], [429, 'insufficient_quota']]) {
+    let calls = 0;
+    await assert.rejects(transcribeAudio(audio(), 'sk-test', DEFAULT_SETTINGS, undefined, async () => {
+      calls++;
+      return new Response(JSON.stringify({ error: { code } }), { status });
+    }, '', { retryDelay: 1 }), error => error.retryable === false && error.action === 'settings' && error.httpStatus === status);
+    assert.equal(calls, 1);
+  }
+});
+
+test('cancelar durante a espera de reconexão impede uma nova chamada', async () => {
+  const controller = new AbortController(); let calls = 0;
+  const pending = transcribeAudio(audio(), 'sk-test', DEFAULT_SETTINGS, controller.signal, async () => { calls++; throw new Error('offline'); }, '', { retryDelay: 1000 });
+  await new Promise(resolve => setTimeout(resolve, 10));
+  controller.abort();
+  await assert.rejects(pending);
+  assert.equal(calls, 1);
+});

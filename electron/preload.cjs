@@ -1,12 +1,13 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const call = async (name, ...args) => {
   const response = await ipcRenderer.invoke(name, ...args);
-  if (!response.ok) throw Object.assign(new Error(response.error), { code: response.code, retryable: response.retryable });
+  if (!response.ok) throw Object.assign(new Error(response.error), { code: response.code, retryable: response.retryable, action: response.action });
   return response.value;
 };
 const on = (channel, handler) => { const listener = (_, value) => handler(value); ipcRenderer.on(channel, listener); return () => ipcRenderer.removeListener(channel, listener); };
 contextBridge.exposeInMainWorld('transcribe', {
   getState: () => call('state'), saveSettings: value => call('settings', value),
+  rendererReady: () => call('renderer-ready'),
   saveKey: key => call('save-key', key), removeKey: () => call('remove-key'), testKey: () => call('test-key'),
   transcribe: audio => call('transcribe', audio), cancel: () => call('cancel'),
   beginRecording: () => call('begin-recording'), recordingAction: action => call('recording-action', action),

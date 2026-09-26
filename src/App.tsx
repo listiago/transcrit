@@ -37,7 +37,7 @@ export function App() {
   const run = async (action: () => Promise<unknown>, message?: string) => { try { await action(); if (message) flash(message); } catch (error) { setNotice((error as Error).message); } };
   useEffect(() => {
     if (!bridge) return;
-    void bridge.getState().then(value => { setApp(value); if (value.keyStatus === 'unreadable') setPage('settings'); if (value.warning) setNotice(value.warning); }).catch(error => setNotice(error.message));
+    void bridge.getState().then(value => { setApp(value); if (value.keyStatus !== 'ready') setPage('settings'); if (value.warning) setNotice(value.warning); }).catch(error => setNotice(error.message));
     void refreshHistory();
     return bridge.onNavigate(value => { if (['record', 'history', 'settings'].includes(value)) setPage(value); });
   }, []);
@@ -49,6 +49,7 @@ export function App() {
     else flash('Sua transcrição está pronta.');
   };
   const recorder = useRecorder(app, onResult, () => { setPage('settings'); flash('Adicione sua chave OpenAI para começar.'); });
+  useEffect(() => { if (app) void bridge?.rendererReady().catch(error => setNotice(error.message)); }, [!!app]);
   const busy = ['starting', 'recording', 'processing'].includes(recorder.phase);
   const isRecording = recorder.phase === 'recording';
   const settings = app?.settings;

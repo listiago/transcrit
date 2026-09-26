@@ -4,8 +4,9 @@ export type Transcript = { id: string; text: string; createdAt: string; duration
 export type AudioInput = { bytes: ArrayBuffer; name: string; duration: number; source: 'mic' | 'file' };
 export type TranscriptionResult = { item: Transcript; delivery: string; warning: string };
 export type Phase = 'idle' | 'starting' | 'recording' | 'processing' | 'error';
-export type OverlayState = { status: string; message: string; preview: string; pending: number; previewError: string; retryable: boolean };
+export type OverlayState = { status: string; message: string; preview: string; pending: number; previewError: string; retryable: boolean; errorAction?: 'record' | 'retry' | 'settings' };
 export type Bridge = {
+  rendererReady(): Promise<void>;
   getState(): Promise<AppState>; saveSettings(settings: Partial<Settings>): Promise<AppState>;
   saveKey(key: string): Promise<AppState>; removeKey(): Promise<AppState>; testKey(): Promise<boolean>;
   transcribe(audio: AudioInput): Promise<TranscriptionResult>; cancel(): Promise<boolean>;

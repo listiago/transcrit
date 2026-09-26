@@ -30,7 +30,7 @@ class Store {
   persist() { this.write(this.file, JSON.stringify(this.data, null, 2)); }
   key() {
     if (!this.data.encryptedKey) return '';
-    try { return this.decrypt(this.data.encryptedKey); } catch { throw new Error('Não foi possível abrir sua chave no cofre do sistema. Cadastre-a novamente.'); }
+    try { return this.decrypt(this.data.encryptedKey); } catch { throw Object.assign(new Error('Não foi possível abrir sua chave no cofre do sistema. Cadastre-a novamente.'), { code: 'key_unreadable', retryable: false, action: 'settings' }); }
   }
   keyStatus() {
     if (!this.data.encryptedKey) return 'missing';

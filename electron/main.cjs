@@ -24,8 +24,8 @@ const singleInstance = testMode || app.requestSingleInstanceLock();
 if (!singleInstance) app.quit();
 let mainWindow, overlay, tray, store, controller, guardStart, keyboardGuard, diagnostics;
 let quitting = false, active = false, toggling = false, ready = false, target = '', shortcutSession = false, shortcutRegistered = false;
-let dictation, anchor, overlayDisplay, hiddenByUser = false, pendingAction = '';
-let overlayState = { status: 'idle', message: '', preview: '', pending: 0, previewError: '', retryable: false };
+let dictation, anchor, overlayDisplay, hiddenByUser = false, pendingAction = '', pendingNavigation = '', openWhenReady = false;
+let overlayState = { status: 'idle', message: '', preview: '', pending: 0, previewError: '', retryable: false, errorAction: 'record' };
 const controls = new SessionControls(globalShortcut, async () => {
     if (guardStart) await guardStart.catch(() => {});
     const released = keyboardGuard ? await keyboardGuard.waitForRelease() : await waitForControlKeysReleased();
@@ -41,18 +41,20 @@ const allowedPage = url => devURL ? url === devURL || url.startsWith(`${devURL}/
 const publicState = () => ({ settings: store.settings(), hasKey: !!store.data.encryptedKey, keyStatus: store.keyStatus(), platform: process.platform, version: app.getVersion(), shortcutRegistered, warning: store.warning, secureStorage: safeStorage.isEncryptionAvailable() });
 
 function showMain(page) {
+  if (page) pendingNavigation = page;
+  if (!mainWindow || mainWindow.isDestroyed()) { openWhenReady = true; return; }
+  if (mainWindow.isMinimized()) mainWindow.restore();
   mainWindow.show(); mainWindow.focus();
-  if (page) mainWindow.webContents.send('navigate', page);
+  if (ready && pendingNavigation) { mainWindow.webContents.send('navigate', pendingNavigation); pendingNavigation = ''; }
 }
 function showEntry() {
-  if (!mainWindow || !store) return;
-  if (store.keyStatus() !== 'ready') { showMain('settings'); return; }
-  hiddenByUser = false;
-  updateOverlay(overlayState.status === 'idle' ? 'docked' : overlayState.status, overlayState.message);
+  showMain(store && store.keyStatus() !== 'ready' ? 'settings' : undefined);
 }
 function updateOverlay(status, message = '') {
   if (status !== overlayState.status) diagnostics?.write('state', { phase: status });
-  overlayState = { ...overlayState, status, message, retryable: status === 'error' && !!dictation?.error };
+  const failure = dictation?.failure;
+  const retryable = status === 'error' && !!dictation?.error && failure?.retryable !== false;
+  overlayState = { ...overlayState, status, message, retryable, errorAction: status === 'error' && failure?.action === 'settings' ? 'settings' : retryable ? 'retry' : 'record' };
   if (!overlay || overlay.isDestroyed()) return;
   overlay.webContents.send('overlay-state', overlayState);
   if (status === 'idle') { overlay.hide(); return; }
@@ -72,7 +74,7 @@ async function toggleRecording() {
   if (!ready || toggling || controller) return;
   if (controls.phase === 'recording' || controls.phase === 'starting') { controls.finish(); return; }
   if (controls.phase !== 'idle') return;
-  if (!store.data.encryptedKey) { showMain('settings'); return; }
+  if (store.keyStatus() !== 'ready') { showMain('settings'); return; }
   toggling = true;
   hiddenByUser = false; pendingAction = '';
   try {
@@ -89,7 +91,7 @@ function handle(name, fn, allowOverlay = false) {
       return { ok: true, value: await fn(...args) };
     } catch (error) {
       diagnostics?.write('failure', { operation: name, code: error.code || 'unknown', httpStatus: error.httpStatus });
-      return { ok: false, error: error.message || 'Não foi possível concluir esta ação.', code: error.code, retryable: error.retryable };
+      return { ok: false, error: error.message || 'Não foi possível concluir esta ação.', code: error.code, retryable: error.retryable, action: error.action };
     }
   });
 }
@@ -121,6 +123,11 @@ async function deliver(text, duration, source, requestTarget, fromShortcut, sett
       return { item, delivery, warning };
 }
 function installHandlers() {
+  handle('renderer-ready', () => {
+    ready = true;
+    if (pendingNavigation) { mainWindow.webContents.send('navigate', pendingNavigation); pendingNavigation = ''; }
+    diagnostics?.write('renderer_ready');
+  });
   handle('begin-recording', async () => {
     if (controller) throw new Error('Aguarde a transcrição atual terminar.');
     if (!store.key()) throw new Error('Adicione sua chave OpenAI nas configurações para começar.');
@@ -293,12 +300,10 @@ async function createWindows() {
   mainWindow.on('close', event => { if (!quitting) { event.preventDefault(); mainWindow.hide(); if (active || controller) updateOverlay(active ? 'recording' : 'processing'); } });
   mainWindow.on('minimize', () => { if (active || controller) updateOverlay(active ? 'recording' : 'processing'); });
   mainWindow.webContents.on('render-process-gone', () => { controller?.abort(); dictation?.cancel(); dictation = undefined; void releaseControls(); active = false; target = ''; shortcutSession = false; ready = false; updateOverlay('idle'); mainWindow.reload(); });
-  mainWindow.webContents.on('did-finish-load', () => { ready = true; });
+  mainWindow.webContents.on('did-start-loading', () => { ready = false; });
   await Promise.all([mainWindow.loadURL(devURL || rendererURL), overlay.loadURL((devURL || rendererURL) + '#overlay')]);
-  if (!process.argv.includes('--hidden')) {
-    if (store.keyStatus() === 'ready') updateOverlay('docked');
-    else mainWindow.show();
-  }
+  if (!process.argv.includes('--hidden') || openWhenReady) showEntry();
+  openWhenReady = false;
   tray = new Tray(nativeImage.createFromPath(icon).resize({ width: 20, height: 20 }));
   tray.setToolTip('Transcribe — Sua voz, em palavras');
   tray.setContextMenu(Menu.buildFromTemplate([
@@ -312,6 +317,7 @@ async function createWindows() {
 if (singleInstance) app.whenReady().then(async () => {
   diagnostics = new Diagnostics(app.getPath('userData'));
   store = new Store(app.getPath('userData'), safeStorage);
+  diagnostics.write('startup', { code: store.keyStatus() });
   session.defaultSession.setPermissionRequestHandler((contents, permission, callback, details) => callback(contents === mainWindow?.webContents && permission === 'media' && allowedPage(details.requestingUrl) && details.mediaTypes?.every(type => type === 'audio') === true));
   session.defaultSession.setPermissionCheckHandler((contents, permission, _origin, details) => contents === mainWindow?.webContents && permission === 'media' && allowedPage(details.requestingUrl || contents?.getURL() || '') && details.mediaType === 'audio');
   Menu.setApplicationMenu(process.platform === 'darwin' ? Menu.buildFromTemplate([{ label: 'Transcribe', submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'quit' }] }, { role: 'editMenu' }]) : null);
@@ -319,8 +325,8 @@ if (singleInstance) app.whenReady().then(async () => {
   shortcutRegistered = registerShortcut(store.settings().shortcut);
   if (!shortcutRegistered) store.warning = 'O atalho está em uso por outro aplicativo. Escolha outro nas configurações.';
   await createWindows();
-}).catch(error => { dialog.showErrorBox('Não foi possível iniciar o Transcribe', error.message); app.quit(); });
-app.on('second-instance', showEntry);
+}).catch(error => { if (!quitting) dialog.showErrorBox('Não foi possível iniciar o Transcribe', error.message); app.quit(); });
+app.on('second-instance', (_event, argv) => { if (!argv.includes('--hidden')) showEntry(); });
 app.on('activate', showEntry);
 app.on('before-quit', () => { quitting = true; controller?.abort(); dictation?.cancel(); void keyboardGuard?.stop(); });
 app.on('will-quit', () => globalShortcut.unregisterAll());

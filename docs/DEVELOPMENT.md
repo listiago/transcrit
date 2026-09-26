@@ -27,6 +27,7 @@ node scripts/test-storage-persistence.mjs
 npm run test:e2e
 npm run test:reopen
 npm run test:mouse
+npm run test:startup
 ```
 
 Eles usam perfis isolados, áudio sintético e API simulada. `test:e2e` verifica o fluxo de ditado, foco, teclas e recuperação de erros. `test:reopen` cobre fechar/reabrir e cancelamento durante a preparação. `test:mouse` usa cliques nativos e um aplicativo de destino em outro processo, sem o depurador da interface: são seis ciclos, incluindo reaberturas por atalho. `TRANSCRIBE_TEST_EXECUTABLE` permite apontar para um executável instalado. Resultados locais ficam em `test-results/`, ignorado pelo Git.
