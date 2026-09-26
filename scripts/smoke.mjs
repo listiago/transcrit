@@ -28,6 +28,8 @@ try {
     const capture = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
     navigator.mediaDevices.getUserMedia = async constraints => { const stream = await capture(constraints); window.__capturedTracks.push(...stream.getTracks()); return stream; };
   });
+  await expect(page.getByRole('heading', { name: 'Conexão com a OpenAI' })).toBeVisible();
+  await page.getByRole('button', { name: 'Transcrever', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Sua voz, em palavras.' })).toBeVisible();
   await expect(page.getByText('Falta só um detalhe para começar')).toBeVisible();
   await page.screenshot({ path: 'test-results/home.png' });
@@ -309,7 +311,8 @@ try {
     console.log('PASS: arrastar preserva foco e posição; o mesmo botão inicia e para, inserindo no novo aplicativo.');
     await desktop.evaluate(() => globalThis.__other.destroy());
 
-    await desktop.evaluate(() => { globalThis.fetch = async () => new Response('{"error":{"code":"insufficient_quota"}}', { status: 429 }); });
+    // Only temporary server/network failures are retried; quota opens settings.
+    await desktop.evaluate(() => { globalThis.fetch = async () => new Response('{"error":{"code":"server_error"}}', { status: 503 }); });
     await begin();
     await expect.poll(() => page.evaluate(async () => (await window.transcribe.getOverlayState()).previewError), { timeout: 20000 }).not.toBe('');
     await focusNative(expectedTarget);

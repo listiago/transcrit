@@ -18,13 +18,13 @@ O código é aberto e o aplicativo é gratuito. **Você usa sua própria chave d
 
 ## Download
 
-**Versão 1.2.4** — instaladores e checksums na [página da versão](https://github.com/listiago/transcrit/releases/tag/v1.2.4).
+**Versão 1.2.5** — instaladores e checksums na [página da versão](https://github.com/listiago/transcrit/releases/tag/v1.2.5).
 
 | Computador | Download | Requisito |
 | --- | --- | --- |
-| Windows | [Instalador .exe](https://github.com/listiago/transcrit/releases/download/v1.2.4/Transcribe-Setup-1.2.4-x64.exe) | Windows 10 ou superior, x64 |
-| Mac com Apple Silicon | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.2.4/Transcribe-1.2.4-macOS-arm64.dmg) | macOS 13 ou superior, chips da família M |
-| Mac com Intel | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.2.4/Transcribe-1.2.4-macOS-x64.dmg) | macOS 13 ou superior, Intel |
+| Windows | [Instalador .exe](https://github.com/listiago/transcrit/releases/download/v1.2.5/Transcribe-Setup-1.2.5-x64.exe) | Windows 10 ou superior, x64 |
+| Mac com Apple Silicon | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.2.5/Transcribe-1.2.5-macOS-arm64.dmg) | macOS 13 ou superior, chips da família M |
+| Mac com Intel | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.2.5/Transcribe-1.2.5-macOS-x64.dmg) | macOS 13 ou superior, Intel |
 
 No Mac, confira o chip em **menu Apple → Sobre Este Mac**. Os arquivos ZIP para as duas arquiteturas também estão na página da versão.
 

@@ -1,7 +1,7 @@
 {
   "name": "transcribe",
   "productName": "Transcribe",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Sua voz, em palavras. Ditado simples para Windows e macOS.",
   "author": {
     "name": "Tiago Lins",

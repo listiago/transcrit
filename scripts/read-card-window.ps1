@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][int]$ApplicationProcess)
+param([Parameter(Mandatory=$true)][int]$ApplicationProcess, [long]$TargetWindow = 0)
 $ErrorActionPreference = 'Stop'
 Add-Type -TypeDefinition @'
 using System;
@@ -12,17 +12,17 @@ public class CardWindow {
   [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr window, out RECT rect);
   [DllImport("user32.dll")] static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
   [DllImport("user32.dll")] static extern uint GetDpiForWindow(IntPtr window);
-  public static void Read(uint pid) {
+  public static void Read(uint pid, long target) {
     SetThreadDpiAwarenessContext(new IntPtr(-4));
     EnumWindows((window, data) => {
       uint process; GetWindowThreadProcessId(window, out process);
       if(process != pid) return true;
       RECT r; GetWindowRect(window, out r); double scale = GetDpiForWindow(window) / 96.0;
-      if(Math.Abs((r.right-r.left)/scale - 136) < 2 && Math.Abs((r.bottom-r.top)/scale - 72) < 2)
-        Console.WriteLine("{{\"handle\":\"{0}\",\"visible\":{1},\"x\":{2},\"y\":{3}}}", window.ToInt64(), IsWindowVisible(window) ? "true" : "false", r.left, r.top);
+      if(target != 0 ? window.ToInt64() == target : Math.Abs((r.right-r.left)/scale - 136) < 2 && Math.Abs((r.bottom-r.top)/scale - 72) < 2)
+        Console.WriteLine("{{\"handle\":\"{0}\",\"visible\":{1},\"x\":{2},\"y\":{3},\"width\":{4},\"height\":{5}}}", window.ToInt64(), IsWindowVisible(window) ? "true" : "false", r.left, r.top, r.right-r.left, r.bottom-r.top);
       return true;
     }, IntPtr.Zero);
   }
 }
 '@
-[CardWindow]::Read($ApplicationProcess)
+[CardWindow]::Read($ApplicationProcess, $TargetWindow)

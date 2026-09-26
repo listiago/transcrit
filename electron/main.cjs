@@ -8,7 +8,7 @@ const { MODEL, validateAudio, validateSettings, transcribeAudio } = require('./c
 const { captureTarget, pasteToTarget, waitForControlKeysReleased } = require('./native.cjs');
 const { SessionControls } = require('./session-controls.cjs');
 const { startKeyboardGuard } = require('./keyboard-guard.cjs');
-const { raiseOverlay, showOverlay } = require('./overlay-window.cjs');
+const { raiseOverlay, showOverlay, positionOverlay } = require('./overlay-window.cjs');
 const { DictationSession } = require('./dictation-session.cjs');
 const { Diagnostics } = require('./diagnostics.cjs');
 
@@ -166,7 +166,7 @@ function installHandlers() {
     const bounds = overlay.getBounds();
     const display = screen.getDisplayNearestPoint({ x: Math.round(bounds.x + bounds.width / 2 + dx), y: Math.round(bounds.y + bounds.height / 2 + dy) });
     overlayDisplay = display; anchor = { right: bounds.x + bounds.width + dx, top: bounds.y + dy };
-    showOverlay(overlay, display.workArea, overlayState.status === 'docked', anchor);
+    positionOverlay(overlay, display.workArea, overlayState.status === 'docked', anchor);
     const moved = overlay.getBounds(); anchor = { right: moved.x + moved.width, top: moved.y };
   }, true);
   handle('open-settings', () => { updateOverlay('idle'); showMain('settings'); }, true);
@@ -292,11 +292,23 @@ async function createWindows() {
   const icon = path.join(__dirname, '../resources/icon.png');
   const webPreferences = { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false, spellcheck: false };
   mainWindow = new BrowserWindow({ width: 1120, height: 800, minWidth: 860, minHeight: 670, show: false, backgroundColor: '#f8f7f4', title: 'Transcribe', icon, titleBarStyle: 'hidden', ...(process.platform === 'darwin' ? { trafficLightPosition: { x: 20, y: 20 } } : {}), webPreferences });
-  overlay = new BrowserWindow({ width: 450, height: 80, title: 'Transcribe — ditado', frame: false, transparent: true, alwaysOnTop: true, skipTaskbar: true, resizable: false, minimizable: false, maximizable: false, fullscreenable: false, focusable: false, acceptFirstMouse: true, ...(process.platform === 'darwin' ? { type: 'panel' } : {}), show: false, hasShadow: false, webPreferences });
+  // Only the hidden recorder needs backgroundThrottling:false. On Windows that
+  // setting can break mouse dispatch when a non-focusable overlay is restored
+  // (electron/electron#29646). Keep Chromium's default lifecycle for the card.
+  overlay = new BrowserWindow({ width: 136, height: 72, title: 'Transcribe — ditado', frame: false, transparent: true, alwaysOnTop: true, skipTaskbar: true, resizable: false, minimizable: false, maximizable: false, fullscreenable: false, focusable: false, acceptFirstMouse: true, ...(process.platform === 'darwin' ? { type: 'panel' } : {}), show: false, hasShadow: false, webPreferences: { ...webPreferences, backgroundThrottling: true } });
   overlay.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   overlay.on('show', () => raiseOverlay(overlay));
   overlay.on('always-on-top-changed', (_event, onTop) => { if (!onTop && overlay.isVisible()) raiseOverlay(overlay); });
   secureWindow(mainWindow); secureWindow(overlay);
+  // The card is only a controller. Recover its renderer without touching the
+  // recorder, destination field or keyboard guard in the main window.
+  const recoverOverlay = code => {
+    if (quitting || overlay.isDestroyed()) return;
+    diagnostics?.write('overlay_recovery', { code });
+    overlay.webContents.reload();
+  };
+  overlay.webContents.on('render-process-gone', (_event, details) => recoverOverlay(details.reason));
+  overlay.on('unresponsive', () => recoverOverlay('unresponsive'));
   mainWindow.on('close', event => { if (!quitting) { event.preventDefault(); mainWindow.hide(); if (active || controller) updateOverlay(active ? 'recording' : 'processing'); } });
   mainWindow.on('minimize', () => { if (active || controller) updateOverlay(active ? 'recording' : 'processing'); });
   mainWindow.webContents.on('render-process-gone', () => { controller?.abort(); dictation?.cancel(); dictation = undefined; void releaseControls(); active = false; target = ''; shortcutSession = false; ready = false; updateOverlay('idle'); mainWindow.reload(); });

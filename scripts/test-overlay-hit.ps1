@@ -36,6 +36,8 @@ public class TranscribeOverlayTest {
         }
       } finally { mouse_event(4, 0, 0, 0, UIntPtr.Zero); }
       SetCursorPos(previous.x, previous.y);
+      System.Threading.Thread.Sleep(100);
+      if (GetForegroundWindow() != foreground) throw new Exception("O controle mudou o foco do aplicativo de destino");
     }
     Console.WriteLine("visible-clickable");
   }
