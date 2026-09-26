@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][long]$TargetWindow, [int]$X, [int]$Y, [switch]$Click, [int]$HoldMilliseconds = 0, [int]$DragX = 0, [int]$DragY = 0)
+param([Parameter(Mandatory=$true)][long]$TargetWindow, [int]$X, [int]$Y, [switch]$Click, [int]$HoldMilliseconds = 0, [int]$DragX = 0, [int]$DragY = 0, [long]$ExpectedForeground = 0)
 $ErrorActionPreference = 'Stop'
 # Exercise actual Windows hit testing; CDP clicks cannot detect an obscured bar.
 Add-Type -TypeDefinition @'
@@ -15,7 +15,7 @@ public class TranscribeOverlayTest {
   [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT point);
   [DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
   [DllImport("user32.dll")] static extern void mouse_event(uint flags, uint x, uint y, uint data, UIntPtr extra);
-  public static void Run(long handle, int x, int y, bool click, int hold, int dx, int dy) {
+  public static void Run(long handle, int x, int y, bool click, int hold, int dx, int dy, long expectedForeground) {
     SetThreadDpiAwarenessContext(new IntPtr(-4));
     IntPtr target = new IntPtr(handle);
     double scale = GetDpiForWindow(target) / 96.0;
@@ -24,6 +24,7 @@ public class TranscribeOverlayTest {
     IntPtr hit = GetAncestor(WindowFromPoint(location), 2);
     if (hit != target) throw new Exception("A barra esta encoberta ou nao recebe cliques: " + hit.ToInt64());
     IntPtr foreground = GetForegroundWindow();
+    if (expectedForeground != 0 && foreground.ToInt64() != expectedForeground) throw new Exception("O aplicativo de destino do teste perdeu o foco antes do clique");
     if (foreground == target) throw new Exception("A barra roubou o foco do campo");
     if (click) {
       POINT previous; GetCursorPos(out previous);
@@ -43,4 +44,4 @@ public class TranscribeOverlayTest {
   }
 }
 '@
-[TranscribeOverlayTest]::Run($TargetWindow, $X, $Y, $Click.IsPresent, $HoldMilliseconds, $DragX, $DragY)
+[TranscribeOverlayTest]::Run($TargetWindow, $X, $Y, $Click.IsPresent, $HoldMilliseconds, $DragX, $DragY, $ExpectedForeground)

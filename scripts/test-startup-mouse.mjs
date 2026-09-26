@@ -47,7 +47,7 @@ try {
   await run('test-shortcut.ps1');
   await expect.poll(async () => (await readCard())?.visible, { timeout: 15000 }).toBe(true);
   const card = await readCard();
-  const hit = (x, ...extra) => run('test-overlay-hit.ps1', ['-TargetWindow', card.handle, '-X', String(x), '-Y', '36', '-Click', ...extra]);
+  const hit = (x, ...extra) => run('test-overlay-hit.ps1', ['-TargetWindow', card.handle, '-ExpectedForeground', targetHandle, '-X', String(x), '-Y', '36', '-Click', ...extra]);
   await run('test-shortcut.ps1', ['-Key', 'Escape']);
   await new Promise(resolve => setTimeout(resolve, 1500));
   for (let cycle = 0; cycle < 4; cycle++) {
@@ -69,7 +69,7 @@ try {
     for (let cycle = 0; cycle < Number(process.env.TRANSCRIBE_MOUSE_CYCLES || 6); cycle++) {
       // Opening/minimizing settings must not change mouse input on the card.
       await inspector.evaluate('__main.show(); __main.minimize(); __main.hide(); true');
-      await run('test-focus.ps1', ['-TargetWindow', targetHandle]); await target.getByRole('textbox').fill('');
+      await target.getByRole('textbox').fill(''); await run('test-focus.ps1', ['-TargetWindow', targetHandle]);
       if (cycle % 2) {
         await hit(108);
         await expect.poll(async () => (await readCard())?.visible).toBe(false);
@@ -86,6 +86,7 @@ try {
       await expect.poll(async () => (await readCard())?.x).not.toBe(before.x);
     }
     await inspector.evaluate('globalThis.__emptySpeech = true');
+    await run('test-focus.ps1', ['-TargetWindow', targetHandle]);
     await hit(64);
     await expect.poll(phase, { timeout: 15000 }).toBe('recording');
     await new Promise(resolve => setTimeout(resolve, 1200));
@@ -96,6 +97,7 @@ try {
     await expect.poll(async () => (await readCard())?.x).not.toBe(beforeErrorDrag.x);
     await inspector.evaluate('globalThis.__emptySpeech = false');
     await target.getByRole('textbox').fill('');
+    await run('test-focus.ps1', ['-TargetWindow', targetHandle]);
     await hit(64);
     await expect.poll(phase, { timeout: 15000 }).toBe('recording');
     await new Promise(resolve => setTimeout(resolve, 1200));
@@ -104,7 +106,11 @@ try {
     await expect(target.getByRole('textbox')).toHaveValue('Texto de teste inserido.');
     console.log('PASS: após erro sem fala, arrastar e gravar novamente pelo mouse.');
     if (process.env.TRANSCRIBE_TEST_CARD_CRASH === '1') {
+      // A renderer restart can span several audio segments. Check every segment
+      // in order, instead of assuming the recording always lasts under 10s.
+      await inspector.evaluate(`globalThis.__crashChunks = 0; globalThis.fetch = async () => new Response(JSON.stringify({ text: 'Trecho ' + ++globalThis.__crashChunks + '.' })); true`);
       await target.getByRole('textbox').fill('');
+      await run('test-focus.ps1', ['-TargetWindow', targetHandle]);
       await hit(64);
       await expect.poll(phase, { timeout: 15000 }).toBe('recording');
       await inspector.evaluate('__card.webContents.forcefullyCrashRenderer(); true');
@@ -115,7 +121,9 @@ try {
       await expect.poll(async () => (await readCard())?.x).not.toBe(beforeRecoveryDrag.x);
       await hit(64);
       await expect.poll(phase, { timeout: 15000 }).toBe('docked');
-      await expect(target.getByRole('textbox')).toHaveValue('Texto de teste inserido.');
+      const chunks = await inspector.evaluate('globalThis.__crashChunks');
+      expect(chunks).toBeGreaterThan(0);
+      await expect(target.getByRole('textbox')).toHaveValue(Array.from({ length: chunks }, (_,index) => `Trecho ${index + 1}.`).join(' '));
       console.log('PASS: renderer do card recuperado durante gravação; parar pelo mouse preserva o ditado e seu destino.');
     }
   }
