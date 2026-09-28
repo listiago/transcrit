@@ -8,7 +8,7 @@ const { MODEL, validateAudio, validateSettings, transcribeAudio } = require('./c
 const { captureTarget, pasteToTarget, waitForControlKeysReleased } = require('./native.cjs');
 const { SessionControls } = require('./session-controls.cjs');
 const { startKeyboardGuard } = require('./keyboard-guard.cjs');
-const { raiseOverlay, showOverlay, positionOverlay } = require('./overlay-window.cjs');
+const { raiseOverlay, showOverlay, positionOverlay, shapeOverlay } = require('./overlay-window.cjs');
 const { DictationSession } = require('./dictation-session.cjs');
 const { Diagnostics } = require('./diagnostics.cjs');
 
@@ -56,6 +56,7 @@ function updateOverlay(status, message = '') {
   const retryable = status === 'error' && !!dictation?.error && failure?.retryable !== false;
   overlayState = { ...overlayState, status, message, retryable, errorAction: status === 'error' && failure?.action === 'settings' ? 'settings' : retryable ? 'retry' : 'record' };
   if (!overlay || overlay.isDestroyed()) return;
+  if (process.platform === 'win32') shapeOverlay(overlay, status === 'starting' || status === 'recording');
   overlay.webContents.send('overlay-state', overlayState);
   if (status === 'idle') { overlay.hide(); return; }
   if (hiddenByUser) return;

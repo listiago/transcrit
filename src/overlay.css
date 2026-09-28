@@ -1,6 +1,6 @@
 .overlay-stage{display:flow-root;height:100vh;position:relative;user-select:none}
-.dictation-overlay.compact{width:136px;height:60px;min-height:0;margin:6px auto;padding:9px 10px;display:grid;grid-template-columns:20px minmax(0,1fr) 40px minmax(0,1fr) 20px;align-items:center;gap:8px;border:1px solid #505c45;border-radius:19px;background:linear-gradient(160deg,#303a2c,#222b21);color:#f1f3e9;overflow:hidden;box-shadow:0 3px 6px #0003,inset 0 1px 0 #ffffff06;transition:width .18s ease,border-color .18s}
-.dictation-overlay.compact.expanded{width:232px;border-color:#65705a}
+.dictation-overlay.compact{width:136px;height:60px;min-height:0;margin:6px auto;padding:9px 10px;display:grid;grid-template-columns:20px minmax(0,1fr) 40px minmax(0,1fr) 20px;align-items:center;gap:8px;border:1px solid #505c45;border-radius:19px;background:linear-gradient(160deg,#303a2c,#222b21);color:#f1f3e9;overflow:hidden;box-shadow:0 3px 6px #0003,inset 0 1px 0 #ffffff06;transition:border-color .18s}
+.dictation-overlay.compact.expanded{width:232px;border-color:#65705a;transition:width .18s ease,border-color .18s}
 .overlay-drag{width:20px;height:36px;padding:0;color:#7f8e74;cursor:grab;touch-action:none}
 .overlay-drag:active{cursor:grabbing}
 .overlay-mic{width:40px;height:40px;border:1px solid #a9bb8b;border-radius:13px;background:#dbe7c4;color:#33412c;transition:background .15s}
