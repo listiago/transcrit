@@ -18,13 +18,13 @@ O código é aberto e o aplicativo é gratuito. **Você usa sua própria chave d
 
 ## Download
 
-**Versão 1.2.5** — instaladores e checksums na [página da versão](https://github.com/listiago/transcrit/releases/tag/v1.2.5).
+**Versão 1.3.0** — instaladores e checksums na [página da versão](https://github.com/listiago/transcrit/releases/tag/v1.3.0).
 
 | Computador | Download | Requisito |
 | --- | --- | --- |
-| Windows | [Instalador .exe](https://github.com/listiago/transcrit/releases/download/v1.2.5/Transcribe-Setup-1.2.5-x64.exe) | Windows 10 ou superior, x64 |
-| Mac com Apple Silicon | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.2.5/Transcribe-1.2.5-macOS-arm64.dmg) | macOS 13 ou superior, chips da família M |
-| Mac com Intel | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.2.5/Transcribe-1.2.5-macOS-x64.dmg) | macOS 13 ou superior, Intel |
+| Windows | [Instalador .exe](https://github.com/listiago/transcrit/releases/download/v1.3.0/Transcribe-Setup-1.3.0-x64.exe) | Windows 10 ou superior, x64 |
+| Mac com Apple Silicon | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.3.0/Transcribe-1.3.0-macOS-arm64.dmg) | macOS 13 ou superior, chips da família M |
+| Mac com Intel | [Instalador .dmg](https://github.com/listiago/transcrit/releases/download/v1.3.0/Transcribe-1.3.0-macOS-x64.dmg) | macOS 13 ou superior, Intel |
 
 No Mac, confira o chip em **menu Apple → Sobre Este Mac**. Os arquivos ZIP para as duas arquiteturas também estão na página da versão.
 
@@ -47,6 +47,10 @@ O Windows foi testado com gravação, cliques, atalhos e inserção em outro apl
 | Abrir o card / iniciar ou terminar o ditado | `Ctrl + Shift + Espaço` | `⌘ + Shift + Espaço` |
 | Terminar a gravação | `Enter` | `Enter` |
 | Cancelar o ditado | `Esc` | `Esc` |
+
+Durante a gravação, barras de frequência acompanham sua voz dos dois lados do botão de parar. As dicas de **Enter** e **Esc** também podem ser clicadas.
+
+Em **Configurações → Voz e gravação**, você pode ativar **Finalizar após silêncio** e escolher de **2 a 30 segundos**. A opção vem **desativada**, com 4 segundos como tempo inicial ao ativar. A contagem começa depois que você fala e reinicia quando a fala retorna.
 
 Arraste pela alça para mover o card. **×** cancela e oculta o card; o atalho pode reabri-lo. Configurações, histórico e importação de áudio ficam no ícone da bandeja do Windows ou da barra de menus do Mac. Para encerrar o aplicativo, escolha **Sair do Transcribe** nesse menu.
 

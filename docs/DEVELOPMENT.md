@@ -28,11 +28,14 @@ npm run test:e2e
 npm run test:reopen
 npm run test:mouse
 npm run test:startup
+npm run test:silence
 ```
 
 Eles usam perfis isolados, áudio sintético e API simulada. `test:e2e` verifica o fluxo de ditado, foco, teclas e recuperação de erros. `test:reopen` cobre fechar/reabrir e cancelamento durante a preparação. `test:mouse` usa cliques nativos e um aplicativo de destino em outro processo, sem o depurador da interface: são seis ciclos, incluindo reaberturas por atalho, abertura/minimização da janela principal e recuperação de ditado sem fala. Confere arraste, fechamento, início, término, inserção e preservação de foco. `TRANSCRIBE_TEST_EXECUTABLE` permite apontar para um executável instalado. `TRANSCRIBE_MOUSE_CYCLES` controla as repetições; `TRANSCRIBE_MOUSE_IDLE_MS` inclui um período ocioso; `TRANSCRIBE_TEST_CARD_CRASH=1` encerra propositalmente o renderer do card durante uma gravação para verificar a recuperação. Resultados locais ficam em `test-results/`, ignorado pelo Git.
 
 O teste **opcional** `node scripts/validate-live.mjs --synthetic-audio` usa a chave já salva e faz chamadas reais com áudio sintético no Windows. Ele gera cobrança na API. Não faz parte da validação padrão nem do GitHub Actions.
+
+`test:silence` gera áudio controlado com Web Audio e passa pelo capturador PCM real. Verifica barras responsivas, silêncio antes da fala, reinício da contagem, conclusão automática, cancelamento, dicas clicáveis, liberação de microfone/teclado, inserção em um campo externo e persistência da preferência. A API é simulada.
 
 ## Gerar instaladores
 
@@ -72,6 +75,7 @@ Sem a opção de publicar, a execução manual apenas gera artefatos. A publica�
 | `electron/native.cjs`, `electron/native/windows.ps1` | Campo de destino e colagem nativa |
 | `electron/session-controls.cjs`, `electron/keyboard-guard.cjs` | Captura temporária de Enter/Esc e soltura de teclas |
 | `src/useRecorder.ts`, `public/pcm-worklet.js`, `src/audio-segments.mjs` | PCM contínuo, segmentação WAV, medidor e cancelamento |
+| `src/audio-meter.mjs`, `src/silence-detector.mjs` | Oito bandas de frequência e finalização opcional por silêncio |
 | `electron/dictation-session.cjs` | Fila sequencial e repetição só dos trechos pendentes |
 | `src/App.tsx` | Configurações, transcrições e histórico |
 | `src/Overlay.tsx`, `electron/overlay-window.cjs` | Minicard, estados e arraste sem tomar foco |
@@ -81,5 +85,9 @@ O modelo configurado é `gpt-transcribe`, no endpoint `https://api.openai.com/v1
 O minicard é transparente e não recebe foco; o macOS usa o tipo panel. O gravador fica na janela principal com `backgroundThrottling: false` para continuar trabalhando enquanto ela está escondida. O card usa `backgroundThrottling: true`, o padrão do Chromium. Compartilhar a configuração do gravador com a janela sem foco reproduzia, no Windows, perda de eventos de mouse após esconder/reabrir: o evento de soltar chegava, mas o de pressionar era descartado. Há um [relato histórico com essa combinação de opções](https://github.com/electron/electron/issues/29646). A correção local foi validada com o Electron resolvido no lockfile; não depende de supor que todo relato antigo continua presente nas versões atuais.
 
 Mudanças de estado atualizam apenas o conteúdo; arrastar altera somente a posição. `showInactive` é chamado somente quando a janela está oculta. Não há recarga a cada reabertura. Se o renderer do card encerrar ou ficar sem resposta, seu documento é recarregado e consulta o estado atual; a gravação permanece na janela principal. Os diagnósticos registram `overlay_recovery` e o motivo técnico, sem conteúdo do ditado.
+
+A janela nativa mantém 244 × 100 pixels lógicos: somente o card em CSS se expande de 136 para 232 pixels durante a gravação. O botão central não muda de posição. As bandas vêm de um AnalyserNode, enviadas a 10 Hz em mensagens normalizadas, validadas pelo processo principal e vinculadas à sessão ativa. Não há chamadas de posicionamento ou exibição a cada quadro de áudio.
+
+A finalização automática vem desligada. Quando ativada, espera de 2 a 30 segundos (inicialmente 4). O detector usa o tempo das amostras PCM, arma após 200 ms de sinal acima do limiar RMS 0,008 usado pelo segmentador e reinicia a pausa quando o sinal retorna. Silêncio inicial e ruídos breves não armam o detector. Ruído ambiente contínuo pode impedir a detecção de silêncio. A parada usa o mesmo fluxo de flush, transcrição e inserção da parada manual; não altera o modelo nem usa Realtime.
 
 O teste de regressão de mouse inicia o Transcribe como processo comum. Conectar o Playwright ao renderer ativa a emulação de foco do Chromium e pode mascarar justamente essa falha de uma janela que não deve tomar foco. A inspeção de teste se limita ao processo principal, em um perfil temporário, com API simulada.

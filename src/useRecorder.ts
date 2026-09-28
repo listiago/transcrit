@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AppState, AudioInput, Phase, TranscriptionResult } from './types';
 import { AudioSegments } from './audio-segments.mjs';
+import { SilenceDetector } from './silence-detector.mjs';
+import { meterBands } from './audio-meter.mjs';
 
 export function useRecorder(app: AppState | null, onResult: (result: TranscriptionResult) => void, onNeedsKey: () => void) {
   const [phase, setPhase] = useState<Phase>('idle');
@@ -78,6 +80,12 @@ export function useRecorder(app: AppState | null, onResult: (result: Transcripti
       await audioContext.audioWorklet.addModule(new URL('pcm-worklet.js', document.baseURI).href);
       await audioContext.resume();
       if (id !== generation.current) { void audioContext.close().catch(() => {}); return; }
+      const preferences = current.current.app!.settings;
+      const silence = preferences.autoStop ? new SilenceDetector(audioContext.sampleRate, preferences.silenceSeconds) : null;
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 512; analyser.smoothingTimeConstant = 0.55;
+      analyser.minDecibels = -80; analyser.maxDecibels = -20;
+      const spectrum = new Uint8Array(analyser.frequencyBinCount);
       let sequence = 0;
       segments.current = new AudioSegments(audioContext.sampleRate, (bytes, duration) => {
         const input = { id: sessionId, sequence: sequence++, bytes, duration };
@@ -90,10 +98,18 @@ export function useRecorder(app: AppState | null, onResult: (result: Transcripti
       node.port.onmessage = event => {
         if (id !== generation.current) return;
         if (event.data.stopped) { flushed.current?.(); return; }
-        if (event.data.pcm) setLevel(Math.min((segments.current?.push(event.data.pcm) || 0) * 5, 1));
+        if (event.data.pcm) {
+          const rms = segments.current?.push(event.data.pcm) || 0;
+          setLevel(Math.min(rms * 5, 1));
+          if (status.current === 'recording') {
+            analyser.getByteFrequencyData(spectrum);
+            window.transcribe?.sendMeter(sessionId, meterBands(spectrum, audioContext.sampleRate, analyser.fftSize, rms));
+            if (silence?.push(rms, event.data.pcm.length)) void actions.current.stop();
+          }
+        }
       };
       node.onprocessorerror = () => { if (id === generation.current) { ++generation.current; void window.transcribe?.cancel(); fail('A captura foi interrompida. Confira seu microfone e tente novamente.'); } };
-      audioContext.createMediaStreamSource(capture).connect(node); node.connect(audioContext.destination);
+      audioContext.createMediaStreamSource(capture).connect(analyser); analyser.connect(node); node.connect(audioContext.destination);
       capture.getAudioTracks()[0].onended = () => { void actions.current.stop(); };
       startedAt.current = performance.now(); updatePhase('recording'); notify('recording');
       timer.current = setInterval(() => { const elapsed = (performance.now() - startedAt.current) / 1000; setSeconds(elapsed); if (elapsed >= 600) void actions.current.stop(); }, 100);

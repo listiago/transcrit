@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('transcribe', {
   appendSegment: input => call('append-segment', input), finishDictation: (id, duration, retry) => call('finish-dictation', id, duration, retry),
   getOverlayState: () => call('overlay-state'), moveOverlay: (dx, dy) => call('move-overlay', dx, dy),
   setRecordingState: (value, message) => call('recording-state', value, message), microphonePermission: () => call('microphone-permission'),
+  sendMeter: (id, bands) => ipcRenderer.send('audio-meter', { id, bands }),
+  onMeter: handler => on('audio-meter', handler),
   openSettings: () => call('open-settings'), dismissOverlay: () => call('dismiss-overlay'),
   getHistory: () => call('history'), deleteHistory: id => call('delete-history', id), clearHistory: () => call('clear-history'),
   copy: text => call('copy', text), exportText: text => call('export', text),

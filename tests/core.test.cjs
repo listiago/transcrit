@@ -22,6 +22,13 @@ test('configurações rejeitam atalhos arbitrários e ignoram chaves desconhecid
   assert.throws(() => validateSettings({ language: '../../secret' }), /Idioma/);
   assert.deepEqual(validateSettings({ language: 'pt', endpoint: 'https://evil.example' }), { language: 'pt' });
 });
+test('finalização por silêncio vem desligada e aceita somente durações válidas', () => {
+  assert.equal(DEFAULT_SETTINGS.autoStop, false);
+  assert.equal(DEFAULT_SETTINGS.silenceSeconds, 4);
+  assert.deepEqual(validateSettings({ autoStop: true, silenceSeconds: 3 }), { autoStop: true, silenceSeconds: 3 });
+  assert.throws(() => validateSettings({ autoStop: 'true' }), /inválida/);
+  for (const value of [0, 1, 31, 3.5, '4', null, NaN, Infinity]) assert.throws(() => validateSettings({ silenceSeconds: value }), /2 a 30/);
+});
 test('requisição usa endpoint fixo, multipart e modelo atual com idioma opcional', async () => {
   const text = await transcribeAudio(audio(), 'sk-test-fixture', { ...DEFAULT_SETTINGS, language: 'pt' }, new AbortController().signal, async (url, init) => {
     assert.equal(url, 'https://api.openai.com/v1/audio/transcriptions');
@@ -63,9 +70,12 @@ test('chave e histórico ficam criptografados e sobrevivem ao reinício', t => {
   store.saveKey('sk-test-only-never-a-real-key');
   assert.equal(store.keyStatus(), 'ready');
   store.addHistory({ id: '1', text: 'um texto particular' });
+  store.saveSettings({ autoStop: true, silenceSeconds: 7 });
   assert.ok(!fs.readFileSync(store.file, 'utf8').includes('sk-test-only'));
   assert.ok(!fs.readFileSync(store.historyFile, 'utf8').includes('particular'));
   const restored = new Store(directory, provider);
+  assert.equal(restored.settings().autoStop, true);
+  assert.equal(restored.settings().silenceSeconds, 7);
   assert.equal(restored.key(), 'sk-test-only-never-a-real-key');
   assert.equal(restored.history()[0].text, 'um texto particular');
   restored.saveSettings({ keepHistory: false });

@@ -1,4 +1,4 @@
-export type Settings = { language: string; autoPaste: boolean; keepHistory: boolean; microphoneId: string; shortcut: string; launchAtLogin: boolean };
+export type Settings = { language: string; autoPaste: boolean; keepHistory: boolean; microphoneId: string; shortcut: string; launchAtLogin: boolean; autoStop: boolean; silenceSeconds: number };
 export type AppState = { settings: Settings; hasKey: boolean; keyStatus: 'missing' | 'ready' | 'unreadable'; platform: string; version: string; shortcutRegistered: boolean; warning: string; secureStorage: boolean };
 export type Transcript = { id: string; text: string; createdAt: string; duration: number; source: 'mic' | 'file' };
 export type AudioInput = { bytes: ArrayBuffer; name: string; duration: number; source: 'mic' | 'file' };
@@ -16,6 +16,8 @@ export type Bridge = {
   onRecordingAction(handler: (action: 'finish' | 'cancel' | 'retry') => void): () => void;
   getOverlayState(): Promise<OverlayState>; moveOverlay(dx: number, dy: number): Promise<void>;
   setRecordingState(state: string, message?: string): Promise<void>; microphonePermission(): Promise<boolean>;
+  sendMeter(id: string, bands: number[]): void;
+  onMeter(handler: (bands: number[]) => void): () => void;
   openSettings(): Promise<void>; dismissOverlay(): Promise<void>;
   getHistory(): Promise<Transcript[]>; deleteHistory(id: string): Promise<void>; clearHistory(): Promise<void>;
   copy(text: string): Promise<void>; exportText(text: string): Promise<boolean>;

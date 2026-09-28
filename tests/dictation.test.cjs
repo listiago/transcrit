@@ -99,7 +99,7 @@ test('minicard tem tamanho fixo, nasce à direita e preserva posição em monito
   assert.deepEqual(dock, expanded);
   const initial = overlayBounds(area, false);
   assert.equal(initial.x + initial.width, area.x + area.width - 20);
-  assert.equal(initial.width, 136); assert.equal(initial.height, 72);
+  assert.equal(initial.width, 244); assert.equal(initial.height, 100);
   assert.equal(dock.x + dock.width, expanded.x + expanded.width); assert.equal(dock.y, expanded.y);
   const clamped = overlayBounds(area, false, { right: 1000, top: 2000 });
   assert.ok(clamped.x + clamped.width <= 0); assert.ok(clamped.y + clamped.height <= 1180);

@@ -1,11 +1,22 @@
-.dictation-overlay.compact{height:60px;min-height:0;margin:6px;padding:9px 10px 9px 7px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:8px;border:1px solid #505c45;border-radius:17px;background:#252e23;color:#f1f3e9;user-select:none;overflow:hidden;box-shadow:0 3px 6px #0003}
-.overlay-drag{width:16px;height:36px;padding:0;color:#7f8e74;cursor:grab;touch-action:none;flex-shrink:0}
+.overlay-stage{display:flow-root;height:100vh;position:relative;user-select:none}
+.dictation-overlay.compact{width:136px;height:60px;min-height:0;margin:6px auto;padding:9px 10px;display:grid;grid-template-columns:20px minmax(0,1fr) 40px minmax(0,1fr) 20px;align-items:center;gap:8px;border:1px solid #505c45;border-radius:19px;background:linear-gradient(160deg,#303a2c,#222b21);color:#f1f3e9;overflow:hidden;box-shadow:0 3px 6px #0003,inset 0 1px 0 #ffffff06;transition:width .18s ease,border-color .18s}
+.dictation-overlay.compact.expanded{width:232px;border-color:#65705a}
+.overlay-drag{width:20px;height:36px;padding:0;color:#7f8e74;cursor:grab;touch-action:none}
 .overlay-drag:active{cursor:grabbing}
-.overlay-mic{width:40px;height:40px;flex-shrink:0;border:1px solid #a9bb8b;border-radius:13px;background:#dbe7c4;color:#33412c;transition:background .15s}
+.overlay-mic{width:40px;height:40px;border:1px solid #a9bb8b;border-radius:13px;background:#dbe7c4;color:#33412c;transition:background .15s}
 .overlay-mic:hover{background:#eaf2da}
-.overlay-mic.listening{background:#dcac87;color:#30281f;border-color:#e9c7a9;box-shadow:0 0 0 4px #dcac8714}
+.overlay-mic.listening{background:linear-gradient(145deg,#efd0ad,#dbaa85);color:#3d3025;border-color:#f1d4b9;box-shadow:0 0 0 4px #dcac8710,inset 0 1px 0 #ffffff30}
 .has-error .overlay-mic{background:#e9bc9d;border-color:#ee967a;color:#612f21}
-.overlay-close{width:22px;height:32px;flex-shrink:0;padding:0;color:#b3bda9;border-radius:7px}
+.overlay-close{width:20px;height:32px;padding:0;color:#b3bda9;border-radius:7px}
 .overlay-close:hover{background:#ffffff0c;color:#fff}
-.dictation-overlay button:focus-visible{outline:2px solid #dcad88;outline-offset:2px}
-.dictation-overlay button:active:not(:disabled){transform:none}
+.voice-spectrum{display:flex;gap:3px;align-items:center;justify-content:center;height:32px;min-width:0;overflow:hidden;opacity:0;transition:opacity .15s}
+.voice-spectrum.reverse{flex-direction:row-reverse}
+.expanded .voice-spectrum{opacity:1}
+.voice-spectrum i{display:block;width:3px;flex-shrink:0;border-radius:3px;background:linear-gradient(#ebc7a4,#c4d5a5);transition:height .09s ease-out,opacity .09s}
+.overlay-shortcuts{position:absolute;top:71px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:9px;width:max-content;padding:2px 9px;border:1px solid #69745a40;border-radius:9px;background:#252e23ed;box-shadow:0 2px 4px #0002;color:#bac3ae}
+.overlay-shortcuts button{font-size:9px;padding:0;gap:5px;color:inherit;line-height:18px}
+.overlay-shortcuts button:hover{color:#f3f4e9}
+.overlay-shortcuts>span{width:1px;height:10px;background:#96a58730}
+.overlay-shortcuts kbd{font-size:9px;padding:2px 3px;border-color:#7e8a663d;color:#dce3d1;background:#49543d45;box-shadow:none}
+.overlay-stage button:focus-visible{outline:2px solid #dcad88;outline-offset:2px}
+.overlay-stage button:active:not(:disabled){transform:none}

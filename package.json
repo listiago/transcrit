@@ -1,7 +1,7 @@
 {
   "name": "transcribe",
   "productName": "Transcribe",
-  "version": "1.2.5",
+  "version": "1.3.0",
   "description": "Sua voz, em palavras. Ditado simples para Windows e macOS.",
   "author": {
     "name": "Tiago Lins",
@@ -33,7 +33,8 @@
     "test:mouse": "node scripts/test-startup-mouse.mjs --mock-api",
     "dist:win": "npm run build && electron-builder --win nsis --x64",
     "dist:mac": "npm run build && electron-builder --mac dmg zip --arm64 --x64",
-    "test:startup": "node scripts/test-startup.mjs"
+    "test:startup": "node scripts/test-startup.mjs",
+    "test:silence": "node scripts/test-silence.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",

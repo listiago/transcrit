@@ -50,9 +50,11 @@ try {
   const hit = (x, ...extra) => run('test-overlay-hit.ps1', ['-TargetWindow', card.handle, '-ExpectedForeground', targetHandle, '-X', String(x), '-Y', '36', '-Click', ...extra]);
   await run('test-shortcut.ps1', ['-Key', 'Escape']);
   await new Promise(resolve => setTimeout(resolve, 1500));
+  for (const [x, y] of [[20, 36], [122, 86]]) await run('test-overlay-hit.ps1', ['-TargetWindow', card.handle, '-X', String(x), '-Y', String(y), '-ExpectTransparent']);
+  console.log('PASS: áreas transparentes ao redor do card não interceptam cliques.');
   for (let cycle = 0; cycle < 4; cycle++) {
     const before = await readCard();
-    await hit(22, '-HoldMilliseconds', '150', '-DragX', cycle % 2 ? '100' : '-100', '-DragY', cycle % 2 ? '80' : '-80');
+    await hit(75, '-HoldMilliseconds', '150', '-DragX', cycle % 2 ? '100' : '-100', '-DragY', cycle % 2 ? '80' : '-80');
     await expect.poll(async () => (await readCard())?.x, { timeout: 3000 }).not.toBe(before.x);
   }
   console.log('PASS: arrastar repetidamente na execução normal.');
@@ -71,37 +73,37 @@ try {
       await inspector.evaluate('__main.show(); __main.minimize(); __main.hide(); true');
       await target.getByRole('textbox').fill(''); await run('test-focus.ps1', ['-TargetWindow', targetHandle]);
       if (cycle % 2) {
-        await hit(108);
+        await hit(169);
         await expect.poll(async () => (await readCard())?.visible).toBe(false);
         await run('test-shortcut.ps1');
-      } else await hit(64);
+      } else await hit(122);
       await expect.poll(phase, { timeout: 15000 }).toBe('recording');
       await new Promise(resolve => setTimeout(resolve, 1200));
-      await hit(64);
+      await hit(122);
       await expect.poll(phase, { timeout: 7000, message: `Parar pelo mouse após reabrir, ciclo ${cycle + 1}` }).toBe('docked');
       await expect(target.getByRole('textbox')).toHaveValue('Texto de teste inserido.', { timeout: 15000 });
       console.log('PASS: iniciar e parar pelo mouse, ciclo', cycle + 1);
       const before = await readCard();
-      await hit(22, '-HoldMilliseconds', '150', '-DragX', cycle % 2 ? '50' : '-50', '-DragY', cycle % 2 ? '40' : '-40');
+      await hit(75, '-HoldMilliseconds', '150', '-DragX', cycle % 2 ? '50' : '-50', '-DragY', cycle % 2 ? '40' : '-40');
       await expect.poll(async () => (await readCard())?.x).not.toBe(before.x);
     }
     await inspector.evaluate('globalThis.__emptySpeech = true');
     await run('test-focus.ps1', ['-TargetWindow', targetHandle]);
-    await hit(64);
+    await hit(122);
     await expect.poll(phase, { timeout: 15000 }).toBe('recording');
     await new Promise(resolve => setTimeout(resolve, 1200));
-    await hit(64);
+    await hit(122);
     await expect.poll(phase, { timeout: 15000 }).toBe('error');
     const beforeErrorDrag = await readCard();
-    await hit(22, '-HoldMilliseconds', '150', '-DragX', '-60', '-DragY', '-40');
+    await hit(75, '-HoldMilliseconds', '150', '-DragX', '-60', '-DragY', '-40');
     await expect.poll(async () => (await readCard())?.x).not.toBe(beforeErrorDrag.x);
     await inspector.evaluate('globalThis.__emptySpeech = false');
     await target.getByRole('textbox').fill('');
     await run('test-focus.ps1', ['-TargetWindow', targetHandle]);
-    await hit(64);
+    await hit(122);
     await expect.poll(phase, { timeout: 15000 }).toBe('recording');
     await new Promise(resolve => setTimeout(resolve, 1200));
-    await hit(64);
+    await hit(122);
     await expect.poll(phase, { timeout: 15000 }).toBe('docked');
     await expect(target.getByRole('textbox')).toHaveValue('Texto de teste inserido.');
     console.log('PASS: após erro sem fala, arrastar e gravar novamente pelo mouse.');
@@ -111,15 +113,15 @@ try {
       await inspector.evaluate(`globalThis.__crashChunks = 0; globalThis.fetch = async () => new Response(JSON.stringify({ text: 'Trecho ' + ++globalThis.__crashChunks + '.' })); true`);
       await target.getByRole('textbox').fill('');
       await run('test-focus.ps1', ['-TargetWindow', targetHandle]);
-      await hit(64);
+      await hit(122);
       await expect.poll(phase, { timeout: 15000 }).toBe('recording');
       await inspector.evaluate('__card.webContents.forcefullyCrashRenderer(); true');
       await expect.poll(() => inspector.evaluate('__card.webContents.isCrashed()'), { timeout: 10000 }).toBe(false);
       await new Promise(resolve => setTimeout(resolve, 1000));
       const beforeRecoveryDrag = await readCard();
-      await hit(22, '-HoldMilliseconds', '150', '-DragX', '60', '-DragY', '40');
+      await hit(27, '-HoldMilliseconds', '150', '-DragX', '60', '-DragY', '40');
       await expect.poll(async () => (await readCard())?.x).not.toBe(beforeRecoveryDrag.x);
-      await hit(64);
+      await hit(122);
       await expect.poll(phase, { timeout: 15000 }).toBe('docked');
       const chunks = await inspector.evaluate('globalThis.__crashChunks');
       expect(chunks).toBeGreaterThan(0);
@@ -127,7 +129,7 @@ try {
       console.log('PASS: renderer do card recuperado durante gravação; parar pelo mouse preserva o ditado e seu destino.');
     }
   }
-  await run('test-overlay-hit.ps1', ['-TargetWindow', card.handle, '-X', '108', '-Y', '36', '-Click']);
+  await run('test-overlay-hit.ps1', ['-TargetWindow', card.handle, '-X', '169', '-Y', '36', '-Click']);
   await expect.poll(async () => (await readCard())?.visible, { timeout: 3000 }).toBe(false);
   console.log('PASS: sem flags de automação do Chromium, o card responde ao mouse com outro aplicativo em primeiro plano.');
 } catch (error) {

@@ -6,7 +6,7 @@ function raiseOverlay(window) {
 }
 
 function overlayBounds(workArea, _docked, anchor) {
-  const width = 136, height = 72;
+  const width = 244, height = 100;
   const x = anchor ? anchor.right - width : workArea.x + workArea.width - width - 20;
   const y = anchor ? anchor.top : workArea.y + (workArea.height - height) / 2;
   return { width, height, x: Math.round(Math.max(workArea.x, Math.min(x, workArea.x + workArea.width - width))), y: Math.round(Math.max(workArea.y, Math.min(y, workArea.y + workArea.height - height))) };

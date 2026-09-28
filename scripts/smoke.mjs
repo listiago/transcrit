@@ -259,7 +259,7 @@ try {
     await expect.poll(() => desktop.evaluate(() => globalThis.__chunks.length), { timeout: 20000 }).toBeGreaterThan(0);
     await expect(overlayPage.locator('.overlay-preview, .overlay-caption, footer')).toHaveCount(0);
     const compactBounds = await desktop.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find(window => window.webContents.getURL().includes('#overlay')).getBounds());
-    if (compactBounds.width !== 136 || compactBounds.height !== 72) throw new Error('Card cresceu durante o ditado.');
+    if (compactBounds.width !== 244 || compactBounds.height !== 100) throw new Error('Card cresceu durante o ditado.');
     await expect(targetPage.getByRole('textbox')).toHaveValue('');
     await overlayPage.screenshot({ path: 'test-results/overlay-compact-recording.png' });
     await focusNative(expectedTarget);
@@ -274,7 +274,7 @@ try {
     const dockBounds = await desktop.evaluate(({ BrowserWindow, screen }) => { const bar = BrowserWindow.getAllWindows().find(window => window.webContents.getURL().includes('#overlay')); return { bounds: bar.getBounds(), area: screen.getDisplayMatching(bar.getBounds()).workArea, visible: bar.isVisible() }; });
     if (!dockBounds.visible || JSON.stringify(dockBounds.bounds) !== JSON.stringify(compactBounds)) throw new Error('Card mudou de tamanho ou posição ao concluir: ' + JSON.stringify(dockBounds));
     await overlayPage.screenshot({ path: 'test-results/overlay-docked.png' });
-    console.log('PASS: card fixo de 136 × 72, sem textos ou prévia; inserção única ordenada e microfone desligado ao concluir.');
+    console.log('PASS: janela fixa com barras de áudio e dicas discretas; inserção única ordenada e microfone desligado ao concluir.');
 
     await physicalOverlay('Mover card', true, ['-HoldMilliseconds', '150', '-DragX', '-100', '-DragY', '-80']);
     const moved = await desktop.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find(window => window.webContents.getURL().includes('#overlay')).getBounds());

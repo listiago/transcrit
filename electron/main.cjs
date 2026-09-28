@@ -123,6 +123,14 @@ async function deliver(text, duration, source, requestTarget, fromShortcut, sett
       return { item, delivery, warning };
 }
 function installHandlers() {
+  // The recorder sends only eight normalized levels, never PCM, to the card.
+  // Reject stale sessions and any sender other than our trusted main frame.
+  ipcMain.on('audio-meter', (event, value) => {
+    if (event.sender !== mainWindow?.webContents || !event.senderFrame || event.senderFrame !== event.sender.mainFrame || !allowedPage(event.senderFrame.url)) return;
+    if (!active || controls.phase !== 'recording' || value?.id !== dictation?.id || overlay?.isDestroyed()) return;
+    if (!Array.isArray(value.bands) || value.bands.length !== 8 || !value.bands.every(n => Number.isFinite(n) && n >= 0 && n <= 1)) return;
+    overlay?.webContents.send('audio-meter', value.bands);
+  });
   handle('renderer-ready', () => {
     ready = true;
     if (pendingNavigation) { mainWindow.webContents.send('navigate', pendingNavigation); pendingNavigation = ''; }
@@ -295,7 +303,7 @@ async function createWindows() {
   // Only the hidden recorder needs backgroundThrottling:false. On Windows that
   // setting can break mouse dispatch when a non-focusable overlay is restored
   // (electron/electron#29646). Keep Chromium's default lifecycle for the card.
-  overlay = new BrowserWindow({ width: 136, height: 72, title: 'Transcribe — ditado', frame: false, transparent: true, alwaysOnTop: true, skipTaskbar: true, resizable: false, minimizable: false, maximizable: false, fullscreenable: false, focusable: false, acceptFirstMouse: true, ...(process.platform === 'darwin' ? { type: 'panel' } : {}), show: false, hasShadow: false, webPreferences: { ...webPreferences, backgroundThrottling: true } });
+  overlay = new BrowserWindow({ width: 244, height: 100, title: 'Transcribe — ditado', frame: false, transparent: true, alwaysOnTop: true, skipTaskbar: true, resizable: false, minimizable: false, maximizable: false, fullscreenable: false, focusable: false, acceptFirstMouse: true, ...(process.platform === 'darwin' ? { type: 'panel' } : {}), show: false, hasShadow: false, webPreferences: { ...webPreferences, backgroundThrottling: true } });
   overlay.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   overlay.on('show', () => raiseOverlay(overlay));
   overlay.on('always-on-top-changed', (_event, onTop) => { if (!onTop && overlay.isVisible()) raiseOverlay(overlay); });

@@ -1,6 +1,6 @@
 const MAX_AUDIO_BYTES = 25 * 1000 * 1000;
 const MODEL = 'gpt-transcribe';
-const DEFAULT_SETTINGS = { language: 'auto', autoPaste: true, keepHistory: true, microphoneId: '', shortcut: 'CommandOrControl+Shift+Space', launchAtLogin: false };
+const DEFAULT_SETTINGS = { language: 'auto', autoPaste: true, keepHistory: true, microphoneId: '', shortcut: 'CommandOrControl+Shift+Space', launchAtLogin: false, autoStop: false, silenceSeconds: 4 };
 const LANGUAGES = ['auto', 'pt', 'en', 'es', 'fr', 'de', 'it', 'ja'];
 const SHORTCUTS = ['CommandOrControl+Shift+Space', 'CommandOrControl+Alt+Space', 'Alt+Shift+D'];
 const MIME_TYPES = { webm: 'audio/webm', wav: 'audio/wav', mp3: 'audio/mpeg', mp4: 'audio/mp4', m4a: 'audio/mp4', mpeg: 'audio/mpeg', mpga: 'audio/mpeg', ogg: 'audio/ogg', flac: 'audio/flac' };
@@ -17,7 +17,8 @@ function validateAudio(input) {
 function validateSettings(input) {
   if (!input || typeof input !== 'object') throw new Error('Configurações inválidas.');
   const result = {};
-  for (const key of ['autoPaste', 'keepHistory', 'launchAtLogin']) if (key in input) { if (typeof input[key] !== 'boolean') throw new Error('Configuração inválida.'); result[key] = input[key]; }
+  for (const key of ['autoPaste', 'keepHistory', 'launchAtLogin', 'autoStop']) if (key in input) { if (typeof input[key] !== 'boolean') throw new Error('Configuração inválida.'); result[key] = input[key]; }
+  if ('silenceSeconds' in input) { if (!Number.isInteger(input.silenceSeconds) || input.silenceSeconds < 2 || input.silenceSeconds > 30) throw new Error('Escolha de 2 a 30 segundos de silêncio.'); result.silenceSeconds = input.silenceSeconds; }
   if ('language' in input) { if (!LANGUAGES.includes(input.language)) throw new Error('Idioma inválido.'); result.language = input.language; }
   if ('shortcut' in input) { if (!SHORTCUTS.includes(input.shortcut)) throw new Error('Atalho inválido.'); result.shortcut = input.shortcut; }
   if ('microphoneId' in input) { if (typeof input.microphoneId !== 'string' || input.microphoneId.length > 256) throw new Error('Microfone inválido.'); result.microphoneId = input.microphoneId; }
